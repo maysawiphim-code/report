@@ -173,43 +173,62 @@ if uploaded_file:
 
              #.....[บ่าย]...
         st.divider()
-        
-        # 1. ดึงข้อมูล
-        people_v1 = df.iloc[19:26, 4]
-        people_v2 = df.iloc[19:26, 14]
-        car_v1 = df.iloc[19:26, 8]
-        car_v2 = df.iloc[19:26, 18]
+        # ข้อมูลช่วงบ่าย (แถว 20-27)
+        people_v1 = pd.to_numeric(df.iloc[19:27, 4], errors='coerce').fillna(0)
+        people_v2 = pd.to_numeric(df.iloc[19:27, 14], errors='coerce').fillna(0)
+        car_v1 = pd.to_numeric(df.iloc[19:27, 8], errors='coerce').fillna(0)
+        car_v2 = pd.to_numeric(df.iloc[19:27, 18], errors='coerce').fillna(0)
+        # แถวรวมบ่าย (แถว 28)
+        sumpeople_v1, sumpeople_v2 = df.iloc[27, 4], df.iloc[27, 14]
+        sumcar_v1, sumcar_v2 = df.iloc[27, 8], df.iloc[27, 18]
 
-        # 2. ดึงค่าผลรวม
-        sumpeople_v1 = df.iloc[27, 4]
-        sumpeople_v2 = df.iloc[27, 14]
-        sumcar_v1 = df.iloc[27, 8]
-        sumcar_v2 = df.iloc[27, 18]
+        # สร้าง DataFrame ช่วงบ่าย
+        df_people_afternoon = pd.DataFrame({"คน (วันที่ 1)": people_v1.values, "คน (วันที่ 2)": people_v2.values})
+        df_people_afternoon["ผลต่างคน"] = df_people_afternoon["คน (วันที่ 2)"] - df_people_afternoon["คน (วันที่ 1)"]
+        df_people_afternoon.loc["รวม"] = [sumpeople_v1, sumpeople_v2, sumpeople_v2 - sumpeople_v1]
 
-        # 3. สร้าง DataFrame
-        df_people = pd.DataFrame({"คน (วันที่ 1)": people_v1.values, "คน (วันที่ 2)": people_v2.values})
-        df_people["ผลต่างคน"] = df_people["คน (วันที่ 2)"] - df_people["คน (วันที่ 1)"]
-        df_people.loc["รวม"] = [sumpeople_v1, sumpeople_v2, sumpeople_v2 - sumpeople_v1]
-
-        df_car = pd.DataFrame({"รถ (วันที่ 1)": car_v1.values, "รถ (วันที่ 2)": car_v2.values})
-        df_car["ผลต่างรถ"] = df_car["รถ (วันที่ 2)"] - df_car["รถ (วันที่ 1)"]
-        df_car.loc["รวม"] = [sumcar_v1, sumcar_v2, sumcar_v2 - sumcar_v1]
-
-        # 4. ฟังก์ชันกำหนดสี
-        def color_diff(val):
-            if isinstance(val, (int, float)):
-                return f'color: {"red" if val < 0 else "green"}; font-weight: bold'
-            return ''
+        df_car_afternoon = pd.DataFrame({"รถ (วันที่ 1)": car_v1.values, "รถ (วันที่ 2)": car_v2.values})
+        df_car_afternoon["ผลต่างรถ"] = df_car_afternoon["รถ (วันที่ 2)"] - df_car_afternoon["รถ (วันที่ 1)"]
+        df_car_afternoon.loc["รวม"] = [sumcar_v1, sumcar_v2, sumcar_v2 - sumcar_v1]
 
         # 5. แสดงผล
         col1, col2 = st.columns(2)
         with col1:
             st.info("👥 ข้อมูลคนเดินผ่านบ่าย")
-            st.dataframe(df_people.style.map(color_diff, subset=["ผลต่างคน"]), use_container_width=True)
-
+            st.dataframe(df_people_afternoon.style.map(color_diff, subset=["ผลต่างคน"]), use_container_width=True)
         with col2:
             st.info("🚗 ข้อมูลรถผ่านบ่าย")
-            st.dataframe(df_car.style.map(color_diff, subset=["ผลต่างรถ"]), use_container_width=True)
+            st.dataframe(df_car_afternoon.style.map(color_diff, subset=["ผลต่างรถ"]), use_container_width=True)
+
+        #.....[ดึก]...
+        st.divider()
+        # ข้อมูลช่วงดึก (แถว 31-38 -> index 30 ถึง 38)
+        people_v1 = pd.to_numeric(df.iloc[30:38, 4], errors='coerce').fillna(0)
+        people_v2 = pd.to_numeric(df.iloc[30:38, 14], errors='coerce').fillna(0)
+        car_v1 = pd.to_numeric(df.iloc[30:38, 8], errors='coerce').fillna(0)
+        car_v2 = pd.to_numeric(df.iloc[30:38, 18], errors='coerce').fillna(0)
+        # แถวรวมดึก (แถว 39 -> index 38)
+        sumpeople_v1, sumpeople_v2 = df.iloc[38, 4], df.iloc[38, 14]
+        sumcar_v1, sumcar_v2 = df.iloc[38, 8], df.iloc[38, 18]
+
+        # สร้าง DataFrame ช่วงดึก
+        df_people_night = pd.DataFrame({"คน (วันที่ 1)": people_v1.values, "คน (วันที่ 2)": people_v2.values})
+        df_people_night["ผลต่างคน"] = df_people_night["คน (วันที่ 2)"] - df_people_night["คน (วันที่ 1)"]
+        df_people_night.loc["รวม"] = [sumpeople_v1, sumpeople_v2, sumpeople_v2 - sumpeople_v1]
+
+        df_car_night = pd.DataFrame({"รถ (วันที่ 1)": car_v1.values, "รถ (วันที่ 2)": car_v2.values})
+        df_car_night["ผลต่างรถ"] = df_car_night["รถ (วันที่ 2)"] - df_car_night["รถ (วันที่ 1)"]
+        df_car_night.loc["รวม"] = [sumcar_v1, sumcar_v2, sumcar_v2 - sumcar_v1]
+
+        # 5. แสดงผล
+        col1, col2 = st.columns(2)
+        with col1:
+            st.info("👥 ข้อมูลคนเดินผ่านดึก")
+            st.dataframe(df_people_night.style.map(color_diff, subset=["ผลต่างคน"]), use_container_width=True)
+        with col2:
+            st.info("🚗 ข้อมูลรถผ่านดึก")
+            st.dataframe(df_car_night.style.map(color_diff, subset=["ผลต่างรถ"]), use_container_width=True)
+
 
         # --- กล่องผลรวมสรุปภาพรวมทั้งวัน ---
         st.divider()
@@ -278,3 +297,6 @@ if uploaded_file:
 
     except Exception as e:
         st.error(f"เกิดข้อผิดพลาดในการประมวลผล: {e}")
+
+
+    
