@@ -1,5 +1,10 @@
 import streamlit as st
 import pandas as pd
+from datetime import datetime
+
+
+
+# --- หน้าที่ 1: ตรวจสอบไฟล์ (โค้ดเดิมของคุณ) ---
 
 st.set_page_config(page_title="ระบบตรวจสอบข้อมูล", layout="wide")
 st.title("ระบบตรวจสอบข้อมูลการสำรวจจราจร")
@@ -296,7 +301,48 @@ if uploaded_file:
             st.dataframe(highlight_and_format(subset3), use_container_width=True)
 
     except Exception as e:
-        st.error(f"เกิดข้อผิดพลาดในการประมวลผล: {e}")
+                st.error(f"เกิดข้อผิดพลาดในการประมวลผล: {e}")
 
-
-    
+            # --- ส่วนที่เพิ่ม: อัปโหลดข้อมูลเปรียบเทียบกับไซต์อื่น ---
+    st.divider()
+    st.header("🔗 เปรียบเทียบกับไซต์อื่น")
+        
+    uploaded_compare_file = st.file_uploader("อัปโหลดไฟล์ไซต์อื่นเพื่อเปรียบเทียบ (Excel)", type=["xlsx"], key="compare_file")
+        
+    if uploaded_compare_file:
+            try:
+                df_other = pd.read_excel(uploaded_compare_file, header=None)
+                
+                # 1. จัดการข้อมูลจากไฟล์เปรียบเทียบ (ใช้ fillna(0) เพื่อกันค่าว่าง)
+                other_p1 = pd.to_numeric(df_other.iloc[39, 1:4], errors='coerce').fillna(0).sum().astype(int)
+                other_p2 = pd.to_numeric(df_other.iloc[39, 11:14], errors='coerce').fillna(0).sum().astype(int)
+                other_c1 = pd.to_numeric(df_other.iloc[39, 5:8], errors='coerce').fillna(0).sum().astype(int)
+                other_c2 = pd.to_numeric(df_other.iloc[39, 15:19], errors='coerce').sum().astype(int)
+                
+                # 2. จัดเตรียมตารางเปรียบเทียบ
+                compare_data = {
+                    "รายการ": ["คน (วันที่ 1)", "คน (วันที่ 2)", "รถ (วันที่ 1)", "รถ (วันที่ 2)"],
+                    "ไซต์ปัจจุบัน": [int(total_p1), int(total_p2), int(total_c1), int(total_c2)],
+                    "ไซต์ที่อัปโหลด": [other_p1, other_p2, other_c1, other_c2],
+                    "ส่วนต่าง": [int(total_p1)-other_p1, int(total_p2)-other_p2, int(total_c1)-other_c1, int(total_c2)-other_c2]
+                }
+                
+                df_compare = pd.DataFrame(compare_data)
+                
+                # 3. กำหนดสี
+                def color_diff(val):
+                    color = "red" if val < 0 else "green"
+                    return f'color: {color}; font-weight: bold'
+                
+                numeric_cols = ["ไซต์ปัจจุบัน", "ไซต์ที่อัปโหลด", "ส่วนต่าง"]
+                
+                # 4. แสดงผล (ต้องอยู่ใน try block)
+                st.subheader("ผลการเปรียบเทียบไซต์ปัจจุบัน vs ไซต์ที่อัปโหลด")
+                st.dataframe(
+                    df_compare.style.map(color_diff, subset=["ส่วนต่าง"])
+                    .format("{:.0f}", subset=numeric_cols), 
+                    use_container_width=True
+                )
+                
+            except Exception as e:
+                st.error(f"เกิดข้อผิดพลาดในการอ่านไฟล์หรือสร้างตารางเปรียบเทียบ: {e}")
